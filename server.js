@@ -2,7 +2,7 @@ const express = require('express');
 const emojiRegexRGI = require('emoji-regex/RGI_Emoji.js');
 const fs = require('fs/promises');
 const SocketIO = require('socket.io');
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 4000;
 
 const files = {
   '/': '/index.html',
