@@ -1,0 +1,29 @@
+{
+  "name": "emoji-analysis",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "12.17.x"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mit-teaching-systems-lab/emoji-analysis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mit-teaching-systems-lab/emoji-analysis/issues"
+  },
+  "homepage": "https://github.com/mit-teaching-systems-lab/emoji-analysis#readme",
+  "dependencies": {
+    "emoji-regex": "^9.2.1",
+    "express": "^4.17.1",
+    "object-hash": "^2.1.1",
+    "socket.io": "^3.1.1"
+  }
+}
