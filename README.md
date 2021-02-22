@@ -8,6 +8,15 @@ This repository contains an example websocket service that demonstrates the requ
 
 All services built to interact with DCSS's AI integrations are required to use [Socket.io](https://socket.io/) v3.0.0 (or greater). Socket.io provides "Room" capabilities that are used to determine which clients receive which messages, and must be used to send [`response`](#response) messages back to a DCSS client. 
 
+## Terms
+
+### client
+
+Throughout this document, the word *client* always refers to the DCSS application, which is connecting and sending `request` messages to a service.
+
+### server
+
+Throughout this document, the word *server* always refers to the remote service. This repository contains a demonstration of a *server* in this context.
 
 ## Events
 
