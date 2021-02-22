@@ -1,6 +1,15 @@
+let fs;
+
+try {
+  // Node 14.x
+  fs = require('fs/promises');
+} catch (error) {
+  // Node 12.x
+  fs = require('fs').promises;
+}
+
 const express = require('express');
 const emojiRegexRGI = require('emoji-regex/RGI_Emoji.js');
-const fs = require('fs/promises');
 const SocketIO = require('socket.io');
 const PORT = process.env.PORT || 4000;
 
@@ -24,21 +33,26 @@ const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 const io = SocketIO(server);
 
 io.on('connection', (socket) => {
-  socket.join(socket.handshake.auth.chat.id);
+  socket.join(socket.handshake.auth.token);
 
   socket.on('disconnect', () => {
-    socket.leave(socket.handshake.auth.chat.id);
+    socket.leave(socket.handshake.auth.token);
   });
 
   /*
     THIS IS THE IMPORTANT PART FOR CONSTRUCTING AN AGENT THAT
     TEACHER MOMENTS CAN INTERACT WITH
   */
-  socket.on('request', data => {
+  socket.on('request', payload => {
+    /*
+
+
+     */
+
     const remoji = emojiRegexRGI();
-    const result = remoji.test(data.message);
-    io.to(data.chat.id).emit('response', {
-      ...data,
+    const result = remoji.test(payload.value);
+    io.to(payload.token).emit('response', {
+      ...payload,
       result
     });
   });

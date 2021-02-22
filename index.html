@@ -10,40 +10,38 @@
       <input type="submit" value="Analyze" />
     </form>
     <p id="time"></p>
-    <p id="response"></p>
+    <p id="outcome"></p>
     <script src="object_hash.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      const id = objectHash(performance.now()).slice(0, 10);
+      const key = 'userInput';
+      const token = objectHash(performance.now()).slice(0, 10);
       const port = /***PORT***/; // this is replaced by the server
       const endpoint = location.origin.replace(/:\d.*/, `:${port}`);
       const transports = ['websocket', 'polling'];
 
-      console.log('id', id);
+      console.log('token', token);
       console.log('endpoint', endpoint);
       const socket = io(endpoint, {
         transports,
         auth: {
-          chat: {
-            id
-          }
+          token
         }
       });
 
       const form = document.querySelector('form');
       const input = document.getElementById('input');
-      const response = document.getElementById('response');
+      const outcome = document.getElementById('outcome');
       const submit = document.querySelector('input[type=submit]');
       const time = document.getElementById('time');
 
       const onSubmit = () => {
-        const message = input.value;
+        const value = input.value;
         socket.emit('request', {
-          chat: {
-            id
-          },
-          message
-        })
+          token,
+          key,
+          value
+        });
       };
 
       form.onsubmit = event => {
@@ -55,9 +53,8 @@
         time.innerHTML = `Server time: ${timeString}`;
       });
 
-      socket.on('response', data => {
-        const outcome = `The text "${data.message}" ${data.result ? 'contains an emoji' : 'does not contain an emoji'}`;
-        response.innerHTML = outcome;
+      socket.on('response', response => {
+        outcome.innerHTML = `The text "${response.value}" ${response.result ? 'contains an emoji' : 'does not contain an emoji'}`;
       });
     </script>
   </body>
