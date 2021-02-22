@@ -1,4 +1,4 @@
-# emoji-analysis
+# DCSS Remote AI Service Integration 
 
 This repository contains an example websocket service that demonstrates the required functionality for a service to interact with the DCSS platform's AI integrations. 
 
