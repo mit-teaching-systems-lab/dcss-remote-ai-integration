@@ -68,7 +68,7 @@ This event is triggered when a DCSS client sends a `request` message. The callba
 | `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc.  | Yes |
 
 Example: 
-
+:
 ```js
 socket.on('request', payload => {
   console.log(payload);
@@ -76,8 +76,7 @@ socket.on('request', payload => {
     {
       token: "c22b5f9178342609428d6f51b2c5af4c0bde6a42", 
       key: "userInput", 
-      value
-
+      value: "something the user typed with an emoji 👍"
     }
    */
 });
@@ -102,12 +101,19 @@ Example:
 socket.on('request', payload => {
   const remoji = emojiRegexRGI();
   const result = remoji.test(payload.value);
-  io.to(payload.token).emit('response', {
+  const response = {
     ...payload,
     result
-  });
+  };
+  console.log(response);
+  /*
+    {
+      token: "c22b5f9178342609428d6f51b2c5af4c0bde6a42", 
+      key: "userInput", 
+      value: "something the user typed with an emoji 👍", 
+      result: true
+    }
+   */  
+  io.to(payload.token).emit('response', response);
 });
 ```
-
-
-
