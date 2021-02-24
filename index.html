@@ -49,12 +49,12 @@
         return false;
       };
 
-      socket.on('time', (timeString) => {
-        time.innerHTML = `Server time: ${timeString}`;
+      socket.on('interjection', ({ message }) => {
+        time.innerHTML = message;
       });
 
-      socket.on('response', response => {
-        outcome.innerHTML = `The text "${response.value}" ${response.result ? 'contains an emoji' : 'does not contain an emoji'}`;
+      socket.on('response', ({ value, result }) => {
+        outcome.innerHTML = `The text "${value}" ${result ? 'contains an emoji' : 'does not contain an emoji'}`;
       });
     </script>
   </body>

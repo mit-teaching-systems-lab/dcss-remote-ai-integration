@@ -49,16 +49,68 @@ io.on('connection', (socket) => {
 
      */
 
+    const {
+      context,
+      token,
+      value,
+    } = payload;
+
+    // "Process" the incoming data
     const remoji = emojiRegexRGI();
-    const result = remoji.test(payload.value);
-    io.to(payload.token).emit('response', {
+    const result = remoji.test(value);
+    const response = {
       ...payload,
       result
-    });
+    };
+
+    // Send the response
+    io.to(token).emit('response', response);
+
+    // Store the response for async analysis
+    // Use the socket as the key, since this
+    // is unique to each connection.
+    //
+    // This is for demonstration only.
+    store.set(socket, [
+      ...(store.get(socket) || []),
+      response
+    ]);
   });
   /*
     END
   */
 });
 
-setInterval(() => io.emit('time', new Date().toTimeString()), 1000);
+const store = new WeakMap();
+const threshold = 4;
+const log = {};
+
+setInterval(() => {
+  for (const [socket, responses] of store) {
+    for (const response of responses) {
+      const {
+        context,
+        token,
+        result,
+        value,
+      } = response;
+
+      if (!log[response.token]) {
+        log[response.token] = [];
+      }
+
+      if (response.result) {
+        log[response.token].push(response);
+      }
+
+      if (log[response.token].length === threshold) {
+        const message = `You've used emojis in ${threshold} messages.`;
+        socket.to(token).emit('interject', {
+          token,
+          context,
+          message
+        });
+      }
+    }
+  }
+}, 3000);

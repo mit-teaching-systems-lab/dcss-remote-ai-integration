@@ -64,6 +64,7 @@ This event is triggered when a DCSS client sends a `request` message. The callba
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
 | `token`       | String | The value corresponding to `socket.handshake.auth.token` | Yes |
+| `context`       | Object | An object containing relevant information about the source of the data found in the `value` property | No |
 | `key`    | String | The variable name to associate with the result value. | Yes |
 | `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc.  | Yes |
 
@@ -75,6 +76,10 @@ socket.on('request', payload => {
   /*
     {
       token: "c22b5f9178342609428d6f51b2c5af4c0bde6a42", 
+      context: {
+        chat: { id }, 
+        user: { id }
+      },
       key: "userInput", 
       value: "something the user typed with an emoji 👍"
     }
@@ -91,6 +96,7 @@ This event is emitted when the service has new data for a DCSS client. The `payl
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
 | `token`       | String | The value corresponding to `socket.handshake.auth.token`; provided in the `payload` received when the `request` event was triggered. | Yes |
+| `context`       | Object | This *must* be the same as the `context` object provided in the `request` message. | No |
 | `key`    | String | The variable name to associate with the result value; provided in the `payload` received when the `request` event was triggered. | Yes |
 | `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc; provided in the `payload` received when the `request` event was triggered.  | Yes |
 | `result`       | Boolean | The result of the operation provided by the service must be either `true` or `false`. | Yes |
@@ -116,4 +122,93 @@ socket.on('request', payload => {
    */  
   io.to(payload.token).emit('response', response);
 });
+```
+
+### `interjection` 
+
+- Server to Client
+
+This event is emitted when the service has new data for a DCSS client. `interjection` messages can be emitted at any time (whereas `response` messages are initiated by a `request`). The `payload.token` (which *must* correspond to `socket.handshake.auth.token`) is used to message the correct client. The `context` object should be kept in state by the service, as it will be required for DCSS to route the message to appropriate destination. The interjection object must include the following properties:
+
+| Property Name | Type   | Description | Required |
+| ------------- | ------ | ----------- | -------- |
+| `token`       | String | The value corresponding to `socket.handshake.auth.token`; provided in the `payload` received when the `request` event was triggered. | Yes |
+| `context`       | Object | This *must* be the same as the `context` object provided in the `request` message. | No |
+| `message`    | String | The interjection message content. | Yes |
+
+Example: 
+
+```js
+io.on('connection', (socket) => {
+  socket.join(socket.handshake.auth.token);
+
+  socket.on('disconnect', () => {
+    socket.leave(socket.handshake.auth.token);
+  });
+
+  socket.on('request', payload => {
+    const {
+      context, 
+      token, 
+      value,
+    } = payload;
+
+    // "Process" the incoming data
+    const remoji = emojiRegexRGI();
+    const result = remoji.test(value);
+    const response = {
+      ...payload,
+      result
+    };
+
+    // Send the response
+    io.to(token).emit('response', response);
+    
+    // Store the response for async analysis
+    // Use the socket as the key, since this 
+    // is unique to each connection. 
+    store.set(socket, [
+      ...(store.get(socket) || []),
+      response
+    ]);
+  });
+});
+
+// The following should serve only to illustrate
+// how a service might use `interjection` events
+// to asyncronously analyze data and interact with
+// the client. 
+const store = new WeakMap();
+const threshold = 4;
+const log = {};
+
+setInterval(() => {
+  for (const [socket, responses] of store) {
+    for (const response of responses) {
+      const {
+        context, 
+        token,
+        result,
+        value,
+      } = response;
+
+      if (!log[token]) {
+        log[token] = [];
+      }
+
+      if (result) {
+        log[token].push(response);
+      }
+
+      if (log[token].length === threshold) {
+        const message = `You've used emojis in ${threshold} messages.`;
+        socket.to(token).emit('interjection', {
+          token, 
+          context,
+          message
+        });
+      }
+    }
+  }
+}, 3000);
 ```
