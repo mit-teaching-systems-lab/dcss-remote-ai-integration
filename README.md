@@ -178,35 +178,46 @@ io.on('connection', (socket) => {
 // how a service might use `interjection` events
 // to asyncronously analyze data and interact with
 // the client. 
-const store = new WeakMap();
-const threshold = 4;
-const log = {};
+const store = new Map();
+const defaultThreshold = 2;
+const thresholdMap = {};
 
 setInterval(() => {
+  const log = {};
   for (const [socket, responses] of store) {
     for (const response of responses) {
       const {
-        context, 
+        context,
         token,
         result,
         value,
       } = response;
 
-      if (!log[token]) {
-        log[token] = [];
+      if (!thresholdMap[token]) {
+        thresholdMap[token] = defaultThreshold;
+      }
+      const threshold = thresholdMap[token];
+
+      if (!log[response.token]) {
+        log[response.token] = [];
       }
 
-      if (result) {
-        log[token].push(response);
+      if (response.result) {
+        log[response.token].push(response);
       }
 
-      if (log[token].length === threshold) {
-        const message = `You've used emojis in ${threshold} messages.`;
-        socket.to(token).emit('interjection', {
-          token, 
+      if (log[response.token].length === threshold) {
+        thresholdMap[token] += 2;
+        const message = `
+        You've used emojis in ${threshold} messages. You will trigger this message again if you use emojis in ${thresholdMap[token]} messages.
+        `.trim();
+        console.log(message);
+        io.to(token).emit('interjection', {
+          token,
           context,
           message
         });
+        log[response.token].length = 0;
       }
     }
   }

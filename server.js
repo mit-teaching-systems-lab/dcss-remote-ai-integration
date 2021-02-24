@@ -81,11 +81,12 @@ io.on('connection', (socket) => {
   */
 });
 
-const store = new WeakMap();
-const threshold = 4;
-const log = {};
+const store = new Map();
+const defaultThreshold = 2;
+const thresholdMap = {};
 
 setInterval(() => {
+  const log = {};
   for (const [socket, responses] of store) {
     for (const response of responses) {
       const {
@@ -94,6 +95,11 @@ setInterval(() => {
         result,
         value,
       } = response;
+
+      if (!thresholdMap[token]) {
+        thresholdMap[token] = defaultThreshold;
+      }
+      const threshold = thresholdMap[token];
 
       if (!log[response.token]) {
         log[response.token] = [];
@@ -104,12 +110,17 @@ setInterval(() => {
       }
 
       if (log[response.token].length === threshold) {
-        const message = `You've used emojis in ${threshold} messages.`;
-        socket.to(token).emit('interject', {
+        thresholdMap[token] += 2;
+        const message = `
+        You've used emojis in ${threshold} messages. You will trigger this message again if you use emojis in ${thresholdMap[token]} messages.
+        `.trim();
+        console.log(message);
+        io.to(token).emit('interjection', {
           token,
           context,
           message
         });
+        log[response.token].length = 0;
       }
     }
   }

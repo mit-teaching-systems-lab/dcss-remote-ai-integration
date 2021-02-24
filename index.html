@@ -9,7 +9,7 @@
       <input autofocus id="input" />
       <input type="submit" value="Analyze" />
     </form>
-    <p id="time"></p>
+    <p id="interjection"></p>
     <p id="outcome"></p>
     <script src="object_hash.js"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -19,6 +19,7 @@
       const port = /***PORT***/; // this is replaced by the server
       const endpoint = location.origin.replace(/:\d.*/, `:${port}`);
       const transports = ['websocket', 'polling'];
+      const context = {};
 
       console.log('token', token);
       console.log('endpoint', endpoint);
@@ -33,11 +34,13 @@
       const input = document.getElementById('input');
       const outcome = document.getElementById('outcome');
       const submit = document.querySelector('input[type=submit]');
-      const time = document.getElementById('time');
+      const interjection = document.getElementById('interjection');
+
 
       const onSubmit = () => {
         const value = input.value;
         socket.emit('request', {
+          context,
           token,
           key,
           value
@@ -49,8 +52,14 @@
         return false;
       };
 
+      let timeout;
       socket.on('interjection', ({ message }) => {
-        time.innerHTML = message;
+        interjection.innerHTML = message;
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        timeout = setTimeout(() => interjection.innerHTML = '', 3000);
       });
 
       socket.on('response', ({ value, result }) => {
