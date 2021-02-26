@@ -11,13 +11,14 @@
     </form>
     <p id="interjection"></p>
     <p id="outcome"></p>
-    <script src="object_hash.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="/Users/rcmurray/git/rcmurray/emoji-analysis/node_modules/object-hash/dist/object_hash.js"></script>
+    <script src="/Users/rcmurray/git/rcmurray/emoji-analysis/node_modules/socket.io/client-dist/socket.io.js"></script>
     <script>
       const key = 'userInput';
       const token = objectHash(performance.now()).slice(0, 10);
-      const port = /***PORT***/; // this is replaced by the server
-      const endpoint = location.origin.replace(/:\d.*/, `:${port}`);
+      const port = 'misty.lti.cs.cmu.edu/bazaar'; 
+      <!-- const endpoint = location.origin.replace(/:\d.*/, `:${port}`); -->
+      const endpoint = 'https://misty.lti.cs.cmu.edu';
       const transports = ['websocket', 'polling'];
       const context = {};
 
@@ -25,6 +26,9 @@
       console.log('endpoint', endpoint);
       const socket = io(endpoint, {
         transports,
+        path: "/bazsocket/",
+        agent: "mturklightside",
+        room: "10000",
         auth: {
           token
         }
