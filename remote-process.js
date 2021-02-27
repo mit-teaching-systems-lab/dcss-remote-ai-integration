@@ -18,10 +18,13 @@ const rl = readline.createInterface({
   prompt: '> '
 });
 
-const key = 'userInput';
-const token = objectHash(performance.now()).slice(0, 10);
-const endpoint = 'ws://emoji-analysis-production.herokuapp.com';
+const token = objectHash(performance.now());
+// const endpoint = 'ws://emoji-analysis-production.herokuapp.com';
+const endpoint = 'http://localhost:4000';
 const transports = ['websocket', 'polling'];
+const agent = {
+  name: 'Emoji Analysis'
+};
 
 console.log('token', token);
 console.log('endpoint', endpoint);
@@ -29,9 +32,18 @@ console.log('endpoint', endpoint);
 const socket = io(endpoint, {
   transports,
   auth: {
+    agent,
     token
   }
 });
+
+const context = {
+  user: {
+    id: 1
+  }
+};
+
+const annotations = [];
 
 socket.on('response', ({value, result}) => {
   console.log(`The text "${value}" ${result ? 'contains an emoji' : 'does not contain an emoji'}`);
@@ -45,9 +57,12 @@ rl.prompt();
 
 rl.on('line', (line) => {
   const value = line.trim();
+  const key = 'userInput';
   socket.emit('request', {
-    token,
+    annotations,
+    context,
     key,
+    token,
     value
   });
   rl.prompt();

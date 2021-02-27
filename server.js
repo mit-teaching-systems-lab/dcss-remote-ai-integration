@@ -116,8 +116,11 @@ setInterval(() => {
         `.trim();
         console.log(message);
         io.to(token).emit('interjection', {
+          // REQUIRED
           token,
+          // REQUIRED
           context,
+          // REQUIRED
           message
         });
         log[response.token].length = 0;

@@ -14,19 +14,22 @@
     <script src="object_hash.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      const key = 'userInput';
-      const token = objectHash(performance.now()).slice(0, 10);
       const port = /***PORT***/; // this is replaced by the server
       const endpoint = location.origin.replace(/:\d.*/, `:${port}`);
       const transports = ['websocket', 'polling'];
-      const context = {};
+      const token = objectHash(performance.now());
+      const agent = {
+        name: 'Emoji Analysis'
+      };
 
       console.log('token', token);
       console.log('endpoint', endpoint);
+
       const socket = io(endpoint, {
         transports,
         auth: {
-          token
+          token,
+          agent
         }
       });
 
@@ -36,10 +39,18 @@
       const submit = document.querySelector('input[type=submit]');
       const interjection = document.getElementById('interjection');
 
+      const key = 'userInput';
+      const context = {
+        user: {
+          id: 1
+        },
+      };
+      const annotations = [];
 
       const onSubmit = () => {
         const value = input.value;
         socket.emit('request', {
+          annotations,
           context,
           token,
           key,
@@ -53,17 +64,21 @@
       };
 
       let timeout;
-      socket.on('interjection', ({ message }) => {
-        interjection.innerHTML = message;
-        if (timeout) {
-          clearTimeout(timeout);
-          timeout = null;
+      socket.on('interjection', ({ context, message }) => {
+        if (context.user.id === 1) {
+          interjection.innerHTML = message;
+          if (timeout) {
+            clearTimeout(timeout);
+            timeout = null;
+          }
+          timeout = setTimeout(() => interjection.innerHTML = '', 3000);
         }
-        timeout = setTimeout(() => interjection.innerHTML = '', 3000);
       });
 
       socket.on('response', ({ value, result }) => {
-        outcome.innerHTML = `The text "${value}" ${result ? 'contains an emoji' : 'does not contain an emoji'}`;
+        if (context.user.id === 1) {
+          outcome.innerHTML = `The text "${value}" ${result ? 'contains an emoji' : 'does not contain an emoji'}`;
+        }
       });
     </script>
   </body>
