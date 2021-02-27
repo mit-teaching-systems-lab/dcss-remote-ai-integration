@@ -8,6 +8,8 @@ This repository contains an example websocket service that demonstrates the requ
 
 All services built to interact with DCSS's AI integrations are required to use [Socket.io](https://socket.io/) v3.0.0 (or greater). Socket.io provides "Room" capabilities that are used to determine which clients receive which messages, and must be used to send [`response`](#response) messages back to a DCSS client. 
 
+**Socket connections are created on a per-user basis by the DCSS client.**
+
 ## Terms
 
 ### client
@@ -85,7 +87,6 @@ This event is triggered when a DCSS client sends a `request` message. The callba
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
 | `token`       | String | The value corresponding to `socket.handshake.auth.token` | Yes |
-| `context`     | Object | An object containing relevant information about the source of the data found in the `value` property | Yes |
 | `annotations` | Array | An array of objects that describe prior outcomes of other services, if this request is being chained through services.  | Yes |
 | `key`    | String | The variable name to associate with the result value. | Yes |
 | `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc.  | Yes |
@@ -98,12 +99,11 @@ socket.on('request', payload => {
   /*
     {
       token: "c22b5f9178342609428d6f51b2c5af4c0bde6a42", 
-      context: {
-        chat: { id }, 
-        user: { id }
-      },
       key: "userInput", 
-      value: "something the user typed with an emoji 👍"
+      value: "something the user typed with an emoji 👍", 
+      annotations: [
+        // ...
+      ]
     }
    */
 });
@@ -118,7 +118,6 @@ This event is emitted when the service has new data for a DCSS client. The `payl
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
 | `token`       | String | The value corresponding to `socket.handshake.auth.token`; provided in the `payload` received when the `request` event was triggered. | Yes |
-| `context`       | Object | This *must* be the same as the `context` object provided in _some_ previous `request` message. | No |
 | `key`    | String | The variable name to associate with the result value; provided in the `payload` received when the `request` event was triggered. | Yes |
 | `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc; provided in the `payload` received when the `request` event was triggered.  | Yes |
 | `result`       | Boolean | The result of the operation provided by the service must be either `true` or `false`. | Yes |
@@ -139,7 +138,7 @@ socket.on('request', payload => {
       token: "c22b5f9178342609428d6f51b2c5af4c0bde6a42", 
       key: "userInput", 
       value: "something the user typed with an emoji 👍", 
-      result: true
+      result: true, 
     }
    */  
   io.to(payload.token).emit('response', response);
@@ -150,12 +149,11 @@ socket.on('request', payload => {
 
 - Server to Client
 
-This event is emitted when the service has new data for a DCSS client. `interjection` messages can be emitted at any time (whereas `response` messages are initiated by a `request`). The `payload.token` (which *must* correspond to `socket.handshake.auth.token`) is used to message the correct client. The `context` object should be kept in state by the service, as it will be required for DCSS to route the message to appropriate destination. The interjection object must include the following properties:
+This event is emitted when the service has new data for a DCSS client. `interjection` messages can be emitted at any time (whereas `response` messages are initiated by a `request`). The `payload.token` (which *must* correspond to `socket.handshake.auth.token`) is used to message the correct client. The interjection object must include the following properties:
 
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
 | `token`       | String | The value corresponding to `socket.handshake.auth.token`; provided in the `payload` received when the `request` event was triggered. | Yes |
-| `context`       | Object | This *must* be the same as the `context` object provided in _some_ previous `request` message. | Yes |
 | `message`    | String | The interjection message content. | Yes |
 
 Example: 
@@ -170,7 +168,6 @@ io.on('connection', (socket) => {
 
   socket.on('request', payload => {
     const {
-      context, 
       token, 
       value,
     } = payload;
@@ -209,7 +206,6 @@ setInterval(() => {
   for (const [socket, responses] of store) {
     for (const response of responses) {
       const {
-        context,
         token,
         result,
         value,
@@ -236,7 +232,6 @@ setInterval(() => {
         console.log(message);
         io.to(token).emit('interjection', {
           token,
-          context,
           message
         });
         log[response.token].length = 0;

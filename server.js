@@ -33,10 +33,20 @@ const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 const io = SocketIO(server);
 
 io.on('connection', (socket) => {
-  socket.join(socket.handshake.auth.token);
+  const {
+    agent,
+    token,
+  } = socket.handshake.auth;
+
+
+  socket.join(token);
 
   socket.on('disconnect', () => {
-    socket.leave(socket.handshake.auth.token);
+    socket.leave(token);
+  });
+
+  io.to(token).emit('interjection', {
+    message: 'Hello! I will analyze all of your messages'
   });
 
   /*
@@ -44,27 +54,17 @@ io.on('connection', (socket) => {
     TEACHER MOMENTS CAN INTERACT WITH
   */
   socket.on('request', payload => {
-    /*
-
-
-     */
-
-    const {
-      context,
-      token,
-      value,
-    } = payload;
-
     // "Process" the incoming data
     const remoji = emojiRegexRGI();
-    const result = remoji.test(value);
+    const result = remoji.test(payload.value);
     const response = {
       ...payload,
       result
     };
 
-    // Send the response
-    io.to(token).emit('response', response);
+    // Send the response to the specified socket
+    // corresponding to `token`
+    io.to(payload.token).emit('response', response);
 
     // Store the response for async analysis
     // Use the socket as the key, since this
@@ -90,7 +90,6 @@ setInterval(() => {
   for (const [socket, responses] of store) {
     for (const response of responses) {
       const {
-        context,
         token,
         result,
         value,
@@ -114,13 +113,10 @@ setInterval(() => {
         const message = `
         You've used emojis in ${threshold} messages. You will trigger this message again if you use emojis in ${thresholdMap[token]} messages.
         `.trim();
-        console.log(message);
+
+        // Send an interjection to the specified socket
+        // corresponding to `token`
         io.to(token).emit('interjection', {
-          // REQUIRED
-          token,
-          // REQUIRED
-          context,
-          // REQUIRED
           message
         });
         log[response.token].length = 0;

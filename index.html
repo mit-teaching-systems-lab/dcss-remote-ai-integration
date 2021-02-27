@@ -21,16 +21,16 @@
       const agent = {
         name: 'Emoji Analysis'
       };
-
+      const auth = {
+        token,
+        agent
+      };
       console.log('token', token);
       console.log('endpoint', endpoint);
 
       const socket = io(endpoint, {
         transports,
-        auth: {
-          token,
-          agent
-        }
+        auth
       });
 
       const form = document.querySelector('form');
@@ -40,18 +40,12 @@
       const interjection = document.getElementById('interjection');
 
       const key = 'userInput';
-      const context = {
-        user: {
-          id: 1
-        },
-      };
       const annotations = [];
 
       const onSubmit = () => {
         const value = input.value;
         socket.emit('request', {
           annotations,
-          context,
           token,
           key,
           value
@@ -64,21 +58,17 @@
       };
 
       let timeout;
-      socket.on('interjection', ({ context, message }) => {
-        if (context.user.id === 1) {
-          interjection.innerHTML = message;
-          if (timeout) {
-            clearTimeout(timeout);
-            timeout = null;
-          }
-          timeout = setTimeout(() => interjection.innerHTML = '', 3000);
+      socket.on('interjection', ({ message }) => {
+        interjection.innerHTML = message;
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
         }
+        timeout = setTimeout(() => interjection.innerHTML = '', 3000);
       });
 
       socket.on('response', ({ value, result }) => {
-        if (context.user.id === 1) {
-          outcome.innerHTML = `The text "${value}" ${result ? 'contains an emoji' : 'does not contain an emoji'}`;
-        }
+        outcome.innerHTML = `The text "${value}" ${result ? 'contains an emoji' : 'does not contain an emoji'}`;
       });
     </script>
   </body>
