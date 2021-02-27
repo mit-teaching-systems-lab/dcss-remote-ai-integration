@@ -38,8 +38,9 @@ io.on('connection', (socket) => {
     token,
   } = socket.handshake.auth;
 
-
   socket.join(token);
+
+  console.log(`Received agent ${agent.name}`);
 
   socket.on('disconnect', () => {
     socket.leave(token);
