@@ -153,7 +153,7 @@ This event is emitted when the service has new data for a DCSS client. `interjec
 
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
-| `token`       | String | The value corresponding to `socket.handshake.auth.token`; provided in the `payload` received when the `request` event was triggered. | Yes |
+| `token`       | String | The value corresponding to `socket.handshake.auth.token`. | Yes |
 | `message`    | String | The interjection message content. | Yes |
 
 Example: 
