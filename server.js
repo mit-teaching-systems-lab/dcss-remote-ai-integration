@@ -45,7 +45,6 @@ io.on('connection', (socket) => {
 
   socket.join(user.id);
 
-  console.log('Received token:', token);
   console.log('Received agent:', agent);
   console.log('Received chat:', chat);
   console.log('Received user:', user);
