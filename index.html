@@ -5,10 +5,11 @@
   <body>
     <h2>Use this to demonstrate send and receive to socket server</h2>
     <h3>Type in the input and click "Analyze". If your message includes an emoji, it will be reported below.</h3>
-    <form>
+    <form style="display:inline">
       <input autofocus id="input" />
       <input type="submit" value="Analyze" />
     </form>
+    <button id="end">End</button>
     <p id="interjection"></p>
     <p id="outcome"></p>
     <script src="object_hash.js"></script>
@@ -17,22 +18,32 @@
       const port = /***PORT***/; // this is replaced by the server
       const endpoint = location.origin.replace(/:\d.*/, `:${port}`);
       const transports = ['websocket', 'polling'];
-      const token = objectHash(performance.now());
       const agent = {
+        id: 1,
         name: 'Emoji Analysis'
       };
-      const auth = {
-        token,
-        agent
+      const chat = {};
+      const user = {
+        id: 2,
+        personalname: 'Web Page User',
+        username: 'web-page-user'
       };
-      console.log('token', token);
-      console.log('endpoint', endpoint);
-
-      const socket = io(endpoint, {
+      const auth = {
+        agent,
+        chat,
+        user,
+      };
+      const configuration = {
         transports,
         auth
-      });
+      };
 
+      console.log('endpoint', endpoint);
+      console.log('configuration', configuration);
+
+      const socket = io(endpoint, configuration);
+
+      const end = document.getElementById('end');
       const form = document.querySelector('form');
       const input = document.getElementById('input');
       const outcome = document.getElementById('outcome');
@@ -46,10 +57,13 @@
         const value = input.value;
         socket.emit('request', {
           annotations,
-          token,
           key,
           value
         });
+      };
+
+      end.onclick = () => {
+        socket.emit('end', auth);
       };
 
       form.onsubmit = event => {

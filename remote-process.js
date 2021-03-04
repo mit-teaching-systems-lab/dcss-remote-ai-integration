@@ -18,25 +18,36 @@ const rl = readline.createInterface({
   prompt: '> '
 });
 
-const token = objectHash(performance.now());
-const endpoint = 'ws://emoji-analysis-production.herokuapp.com';
-// const endpoint = 'http://localhost:4000';
-const transports = ['websocket', 'polling'];
+
+const endpoint = process.env.NODE_ENV && process.env.NODE_ENV === 'production'
+  ? 'ws://emoji-analysis-production.herokuapp.com'
+  : 'http://localhost:4000';
+
+const transports = ['websocket'];
 const agent = {
+  id: 1,
   name: 'Emoji Analysis'
+};
+const chat = {};
+const user = {
+  id: 2,
+  personalname: 'Remote Process User',
+  username: 'remote-process-user'
 };
 const auth = {
   agent,
-  token,
+  chat,
+  user,
 };
-
-console.log('auth', auth);
-console.log('endpoint', endpoint);
-
-const socket = io(endpoint, {
+const configuration = {
   transports,
   auth
-});
+};
+
+console.log('endpoint', endpoint);
+console.log('configuration', configuration);
+
+const socket = io(endpoint, configuration);
 
 const annotations = [];
 
@@ -45,18 +56,22 @@ socket.on('response', ({value, result}) => {
 });
 
 socket.on('interjection', ({message}) => {
-  console.log(message);
+  console.log(`Agent says: "${message}"`);
 });
 
 rl.prompt();
 
 rl.on('line', (line) => {
   const value = line.trim();
+  if (value === 'end') {
+    socket.emit('end', auth);
+    return;
+  }
+
   const key = 'userInput';
   socket.emit('request', {
     annotations,
     key,
-    token,
     value
   });
   rl.prompt();

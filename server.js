@@ -32,29 +32,61 @@ app.get('*', async (req, res) => {
 const server = app.listen(PORT, () => console.log(`Listening on ${PORT}`));
 const io = SocketIO(server);
 
+const cache = {};
+const count = 0;
+
 io.on('connection', (socket) => {
   const {
-    agent,
     token,
+    agent,
+    user,
+    chat
   } = socket.handshake.auth;
 
-  socket.join(token);
+  socket.join(user.id);
 
-  console.log(`Received agent ${agent.name}`);
+  console.log('Received token:', token);
+  console.log('Received agent:', agent);
+  console.log('Received chat:', chat);
+  console.log('Received user:', user);
+  console.log('socket.id', socket.id);
 
-  socket.on('disconnect', () => {
-    socket.leave(token);
-  });
-
-  io.to(token).emit('interjection', {
-    message: 'Hello! I will analyze all of your messages'
-  });
+  if (!cache[user.id]) {
+    cache[user.id] = {
+      agent,
+      chat,
+      user,
+      count,
+      rx: [],
+      tx: []
+    };
+    // Only send the welcome message when this is the
+    // first time the specific user is connecting.
+    //
+    // Send the response to the specified private
+    // channel for this client socket connection.
+    io.to(user.id).emit('interjection', {
+      message: `Hello ${user.personalname || user.username}, I will analyze all of your messages`
+    });
+  }
 
   /*
     THIS IS THE IMPORTANT PART FOR CONSTRUCTING AN AGENT THAT
     TEACHER MOMENTS CAN INTERACT WITH
   */
   socket.on('request', payload => {
+    console.log('request', payload);
+    if (!cache[user.id]) {
+      // The session has been ended!
+      return;
+    }
+
+    // Save user inputs for later. This
+    // currently does nothing at all.
+    cache[user.id].rx.push([
+      'request', payload
+    ]);
+
     // "Process" the incoming data
     const remoji = emojiRegexRGI();
     const result = remoji.test(payload.value);
@@ -63,65 +95,45 @@ io.on('connection', (socket) => {
       result
     };
 
-    // Send the response to the specified socket
-    // corresponding to `token`
-    io.to(payload.token).emit('response', response);
+    // Send the response to the specified private
+    // channel for this client socket connection.
+    io.to(user.id).emit('response', response);
 
     // Store the response for async analysis
     // Use the socket as the key, since this
     // is unique to each connection.
     //
     // This is for demonstration only.
-    store.set(socket, [
-      ...(store.get(socket) || []),
-      response
-    ]);
+    cache[user.id].tx.push(response);
+  });
+
+  socket.on('end', ({ auth, chat, user }) => {
+    if (cache[user.id]) {
+      io.to(user.id).emit('interjection', {
+        message: 'Goodbye!'
+      });
+      cache[user.id] = null;
+    }
   });
   /*
     END
   */
 });
 
-const store = new Map();
-const defaultThreshold = 2;
-const thresholdMap = {};
-
 setInterval(() => {
   const log = {};
-  for (const [socket, responses] of store) {
-    for (const response of responses) {
-      const {
-        token,
-        result,
-        value,
-      } = response;
 
-      if (!thresholdMap[token]) {
-        thresholdMap[token] = defaultThreshold;
-      }
-      const threshold = thresholdMap[token];
+  for (const {count, socket, user, tx} of Object.values(cache).filter(Boolean)) {
+    const total = tx.reduce((accum, response) => accum + Number(response.result), 0);
 
-      if (!log[response.token]) {
-        log[response.token] = [];
-      }
-
-      if (response.result) {
-        log[response.token].push(response);
-      }
-
-      if (log[response.token].length === threshold) {
-        thresholdMap[token] += 2;
-        const message = `
-        You've used emojis in ${threshold} messages. You will trigger this message again if you use emojis in ${thresholdMap[token]} messages.
-        `.trim();
-
-        // Send an interjection to the specified socket
-        // corresponding to `token`
-        io.to(token).emit('interjection', {
-          message
-        });
-        log[response.token].length = 0;
-      }
+    if (total > 0 && total !== count) {
+      cache[user.id].count = total;
+      const message = `You've used emojis in ${total} messages!`.trim();
+      // Send the response to the specified private
+      // channel for this client socket connection.
+      io.to(user.id).emit('interjection', {
+        message
+      });
     }
   }
-}, 3000);
+}, 1000);
