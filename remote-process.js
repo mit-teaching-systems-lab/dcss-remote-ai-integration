@@ -30,9 +30,8 @@ const agent = {
 };
 const chat = {};
 const user = {
-  id: 2,
-  personalname: 'Remote Process User',
-  username: 'remote-process-user'
+  id: 4,
+  name: 'Remote Process User'
 };
 const auth = {
   agent,

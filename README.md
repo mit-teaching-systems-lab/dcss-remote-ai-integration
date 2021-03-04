@@ -49,8 +49,7 @@ The `auth` object *must* contain:
   auth {
     user {
       id, 
-      username, 
-      personalname 
+      name, 
     }
   }
   ```

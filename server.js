@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
     // Send the response to the specified private
     // channel for this client socket connection.
     io.to(user.id).emit('interjection', {
-      message: `Hello ${user.personalname || user.username}, I will analyze all of your messages`
+      message: `Hello ${user.name}, I will analyze all of your messages`
     });
   }
 
