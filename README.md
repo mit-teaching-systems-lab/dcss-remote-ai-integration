@@ -47,8 +47,7 @@ The `auth` object *must* contain:
   }
   ```
     - The `agent` object may also contain a `configuration` property, whose value is an object containing key/value pairs that correspond to configuration options of the remote agent. 
-- a `user` property, whose value is a `User` object that indicates which `User`is currently connecting. **Because a socket client may disconnect and reconnect, with differing `user.id` values on each connection, services _must_ use `user.id` as the private channel (ie. Socket.io's "Room") identifier**. 
-    - The `User` object contains properties that allow the service to create personalized messages.
+- a `user` property, whose value is an object that indicates which client user is currently connecting. **Because a socket client may disconnect and reconnect, with differing `user.id` values on each connection, services _must_ use `user.id` as the private channel (ie. Socket.io's "Room") identifier**. 
 
   ```
   auth {
@@ -58,6 +57,7 @@ The `auth` object *must* contain:
     }
   }
   ```
+    - The `user` object may also contain properties that allow the service to create personalized messages.
 
 
 The `auth` object *may* contain: 
