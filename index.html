@@ -18,29 +18,39 @@
       const port = /***PORT***/; // this is replaced by the server
       const endpoint = location.origin.replace(/:\d.*/, `:${port}`);
       const transports = ['websocket', 'polling'];
+
       const agent = {
         id: 1,
-        name: 'Emoji Analysis'
+        name: 'Emoji Analysis',
+        configuration: {
+          key: 'value'
+        }
       };
-      const chat = {};
+
+      const chat = {
+        id: 2
+      };
+
       const user = {
-        id: 2,
+        id: 3,
         name: 'Web Page User'
       };
+
       const auth = {
         agent,
         chat,
         user,
       };
-      const configuration = {
+
+      const options = {
         transports,
         auth
       };
 
       console.log('endpoint', endpoint);
-      console.log('configuration', configuration);
+      console.log('options', options);
 
-      const socket = io(endpoint, configuration);
+      const socket = io(endpoint, options);
 
       const end = document.getElementById('end');
       const form = document.querySelector('form');

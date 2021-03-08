@@ -23,30 +23,39 @@ const endpoint = process.env.NODE_ENV && process.env.NODE_ENV === 'production'
   ? 'ws://emoji-analysis-production.herokuapp.com'
   : 'http://localhost:4000';
 
-const transports = ['websocket'];
 const agent = {
   id: 1,
-  name: 'Emoji Analysis'
+  name: 'Emoji Analysis',
+  configuration: {
+    key: 'value'
+  }
 };
-const chat = {};
+
+const chat = {
+  id: 2
+};
+
 const user = {
   id: 4,
   name: 'Remote Process User'
 };
+
 const auth = {
   agent,
   chat,
   user,
 };
-const configuration = {
+
+const options = {
   transports,
   auth
 };
 
-console.log('endpoint', endpoint);
-console.log('configuration', configuration);
 
-const socket = io(endpoint, configuration);
+console.log('endpoint', endpoint);
+console.log('options', options);
+
+const socket = io(endpoint, options);
 
 const annotations = [];
 
