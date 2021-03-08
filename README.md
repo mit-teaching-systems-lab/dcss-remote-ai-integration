@@ -14,15 +14,15 @@ All services built to interact with DCSS's AI integrations are required to use [
 
 ### client
 
-Throughout this document, the word *client* always refers to the DCSS application, which is connecting and sending `request` messages to a service.
+Throughout this document, the word **client** always refers to the DCSS application, which is connecting and sending `"request"` messages to a service.
 
 ### server
 
-Throughout this document, the word *server* always refers to the remote service. This repository contains a demonstration of a *server* in this context.
+Throughout this document, the word **server** always refers to the remote service. This repository contains a demonstration of a **server** in this context.
 
 ## Events
 
-### `connection`
+### `"connection"`
 
 - Client to Server
 - Provided by Socket.io, see more [here](https://socket.io/docs/v3/server-api/#Event-%E2%80%98connection%E2%80%99)
@@ -31,9 +31,9 @@ This event is triggered when a DCSS client _connects_ or _reconnects_. The callb
 
 The `auth` object *must* contain: 
 
-- an `agent` property, whose value is an `Agent` object that indicates which `Agent` the DCSS client the intends to engage with. An `Agent` object, at minium, contains a property called `name`, whose value is a string that meaningfully identifies which Agent the remote service should activate.
+- an `agent` property, whose value is an object that indicates which agent the DCSS client the intends to engage with. An `agent` object, at minium, contains a property called `name`, whose value is a string that meaningfully identifies which Agent the remote service should activate.
   
-  **`connection` events with socket objects that do not provide a `socket.handshake.auth.agent` _must_ be ignored.** 
+  **`"connection"` events with socket objects that do not provide a `socket.handshake.auth.agent` _must_ be ignored.** 
 
   ```
   auth {
@@ -63,7 +63,7 @@ The `auth` object *must* contain:
 The `auth` object *may* contain: 
 
 
-- a `chat` property, whose value is a `Chat` object that indicates which `Chat` the user is currently in (the same user may engage in several scenarios over time, and each will have its own `Chat`). 
+- a `chat` property, whose value is an object that indicates which chat the user is currently in (the same user may engage in several scenarios over time, and each will have its own `chat.id`). 
   ```
   auth {
     chat {
@@ -73,7 +73,7 @@ The `auth` object *may* contain:
   ```
     - The `chat` property will only be provided to agents that provide chat services. 
 
-`connection` callbacks are allowed to complete any arbitrary operations, however **it _must_ call `socket.join(socket.handshake.auth.user.id)` to create or join a private channel for the client socket connection**. Not doing so will result in all messages being emitted to all client connections. Using `socket.id` will also result result in all messages being emitted to all client connections (See: [Socket.io's Emit cheatsheet
+`"connection"` callbacks are allowed to complete any arbitrary operations, however **it _must_ call `socket.join(socket.handshake.auth.user.id)` to create or join a private channel for the client socket connection**. Not doing so will result in all messages being emitted to all client connections. Using `socket.id` will also result result in all messages being emitted to all client connections (See: [Socket.io's Emit cheatsheet
 ](https://socket.io/docs/v3/emit-cheatsheet/)).
 
 ```js
@@ -85,14 +85,14 @@ io.on('connection', socket => {
 });
 ```
 
-### `disconnect` 
+### `"disconnect"`
 
 - Client to Server
 - Provided by Socket.io, see more [here](https://socket.io/docs/v3/client-socket-instance/#disconnect)
 
-This event is triggered when a DCSS client _disconnects_. This event does not explicitly indicate that the session is over. There may be several `connect` and `disconnect` events during a given session. See [`end`](#end).
+This event is triggered when a DCSS client _disconnects_. This event does not explicitly indicate that the session is over. There may be several `"connect"` and `"disconnect"` events during a given session. See [`end`](#end).
 
-`disconnect` callbacks are allowed to complete any arbitrary operations, however they *must* call `socket.leave(socket.handshake.auth.user.id)` to leave the private channel for the client socket connection. 
+`"disconnect"` callbacks are allowed to complete any arbitrary operations, however they *must* call `socket.leave(socket.handshake.auth.user.id)` to leave the private channel for the client socket connection. 
 
 ```js
 io.on('connection', socket => {
@@ -109,17 +109,17 @@ io.on('connection', socket => {
 });
 ```
 
-### `end` 
+### `"end"`
 
 - Client to Server
 
-When the client is ready to end a specific engagement with an agent, the client must send an `end` event, with contents of the `auth`. The server may use the contents of `auth` to determine how to shut down the agent: 
+When the client is ready to end a specific engagement with an agent, the client must send an `"end"` event, with contents of the `auth`. The server may use the contents of `auth` to determine how to shut down the agent: 
 
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
 | `agent` | Object | The currently active **agent** for this socket.  | Yes |
 | `chat`    | Object | The currently active **chat** for this socket.  | No |
-| `user`    | Object | The currently active **user** for this socket.  | No |
+| `user`    | Object | The currently active **user** for this socket.  | Yes |
 
 Example: 
 :
@@ -145,11 +145,11 @@ socket.on('end', auth => {
 });
 ```
 
-### `request` 
+### `"request"`
 
 - Client to Server
 
-This event is triggered when a DCSS client sends a `request` message. The callback receives a `payload` object which contains the following properties: 
+This event is triggered when a DCSS client sends a `"request"` message. The callback receives a `payload` object which contains, at minimum, the following properties: 
 
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
@@ -174,17 +174,19 @@ socket.on('request', payload => {
 });
 ```
 
-### `response` 
+### `"response"`
 
 - Server to Client
 
-This event is emitted when the service has new data for a DCSS client. The response object *must* include the following properties: : 
+This event is emitted when the service has new data for a DCSS client. The `"response"` event object *must* include the following properties:
 
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
-| `key`    | String | The variable name to associate with the result value; provided in the `payload` received when the `request` event was triggered. | Yes |
-| `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc; provided in the `payload` received when the `request` event was triggered.  | Yes |
+| `key`    | String | The variable name to associate with the result value; provided in the `payload` received when the `"request"` event was triggered. | Yes |
+| `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc; provided in the `payload` received when the `"request"` event was triggered.  | Yes |
 | `result`       | Boolean | The result of the operation provided by the service *must* be either `true` or `false`. | Yes |
+
+The `"response"` object also *must* include the entire contents of the `"request"` `payload` object.
 
 Example: 
 
@@ -207,11 +209,11 @@ socket.on('request', payload => {
 });
 ```
 
-### `interjection` 
+### `"interjection"`
 
 - Server to Client
 
-This event is emitted when the service has new data for a DCSS client. `interjection` messages can be emitted at any time (whereas `response` messages are initiated by a `request`). The `payload.token` (which *must* correspond to `socket.handshake.auth.token`) is used to message the correct client. The interjection object *must* include the following properties:
+This event is emitted when the service has new data for a DCSS client. `"interjection"` messages can be emitted at any time (whereas `"response"` messages are initiated by a `"request"`). The `payload.token` (which *must* correspond to `socket.handshake.auth.token`) is used to message the correct client. The interjection object *must* include the following properties:
 
 | Property Name | Type   | Description | Required |
 | ------------- | ------ | ----------- | -------- |
