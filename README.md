@@ -73,7 +73,7 @@ The `auth` object *may* contain:
   ```
     - The `chat` property will only be provided to agents that provide chat services. 
 
-`connection` callbacks are allowed to complete any arbitrary operations, however they *must* call `socket.join(socket.handshake.auth.user.id)` to create or join a private channel for the client socket connection. Not doing so will result in all messages being emitted to all client connections. Using `user.id` will also result result in all messages being emitted to all client connections (See: [Socket.io's Emit cheatsheet
+`connection` callbacks are allowed to complete any arbitrary operations, however **it _must_ call `socket.join(socket.handshake.auth.user.id)` to create or join a private channel for the client socket connection**. Not doing so will result in all messages being emitted to all client connections. Using `socket.id` will also result result in all messages being emitted to all client connections (See: [Socket.io's Emit cheatsheet
 ](https://socket.io/docs/v3/emit-cheatsheet/)).
 
 ```js
