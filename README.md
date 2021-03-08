@@ -31,17 +31,22 @@ This event is triggered when a DCSS client _connects_ or _reconnects_. The callb
 
 The `auth` object *must* contain: 
 
-- an `agent` property, whose value is an `Agent` object that indicates which `Agent` the DCSS client the intends to engage with. An `Agent` object, at minium, contains a property called `name`, whose value is a string that meaningfully identifies which Agent the remote service should activate. **`connection` events with socket objects that do not provide a `socket.handshake.auth.agent` _must_ be ignored.** 
+- an `agent` property, whose value is an `Agent` object that indicates which `Agent` the DCSS client the intends to engage with. An `Agent` object, at minium, contains a property called `name`, whose value is a string that meaningfully identifies which Agent the remote service should activate.
+  
+  **`connection` events with socket objects that do not provide a `socket.handshake.auth.agent` _must_ be ignored.** 
 
   ```
   auth {
     agent {
       id, 
       name, 
+      configuration {
+        ..
+      }
     }
   }
   ```
-
+    - The `agent` object may also contain a `configuration` property, whose value is an object containing key/value pairs that correspond to configuration options of the remote agent. 
 - a `user` property, whose value is a `User` object that indicates which `User`is currently connecting. **Because a socket client may disconnect and reconnect, with differing `user.id` values on each connection, services _must_ use `user.id` as the private channel (ie. Socket.io's "Room") identifier**. 
     - The `User` object contains properties that allow the service to create personalized messages.
 
