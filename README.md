@@ -122,7 +122,7 @@ When the client is ready to end a specific engagement with an agent, the client 
 | `user`    | Object | The currently active **user** for this socket.  | Yes |
 
 Example: 
-:
+
 ```js
 socket.on('end', auth => {
   console.log(auth);
@@ -158,7 +158,7 @@ This event is triggered when a DCSS client sends a `"request"` message. The call
 | `value`       | String | The data to operate on, which may be typed text input, an audio transcript, a button value, a slide id, etc.  | Yes |
 
 Example: 
-:
+
 ```js
 socket.on('request', payload => {
   console.log(payload);
