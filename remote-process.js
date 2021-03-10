@@ -20,7 +20,7 @@ const rl = readline.createInterface({
 
 
 const endpoint = process.env.NODE_ENV && process.env.NODE_ENV === 'production'
-  ? 'ws://emoji-analysis-production.herokuapp.com'
+  ? 'ws://dcss-rai-production.herokuapp.com'
   : 'http://localhost:4000';
 
 const agent = {
