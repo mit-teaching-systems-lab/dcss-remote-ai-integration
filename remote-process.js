@@ -18,7 +18,7 @@ const rl = readline.createInterface({
   prompt: '> '
 });
 
-
+const transports = ['websocket'];
 const endpoint = process.env.NODE_ENV && process.env.NODE_ENV === 'production'
   ? 'ws://dcss-rai-production.herokuapp.com'
   : 'http://localhost:4000';
