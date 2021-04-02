@@ -1,6 +1,6 @@
 {
   "name": "emoji-analysis",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "This repository contains an example websocket service that demonstrates the required functionality for a service to interact with the DCSS platform's AI integrations.",
   "engines": {
     "node": "14.x"
