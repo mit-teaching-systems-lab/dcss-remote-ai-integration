@@ -53,10 +53,14 @@ The `auth` object *must* contain:
   auth {
     user {
       id, 
-      name, 
+      name,
+      role {
+        id, name, description
+      } 
     }
   }
   ```
+    - The `user` object must also contain a `role` property, whose value is an object that represents the user's role in the scenario they are completing. 
     - The `user` object may also contain properties that allow the service to create personalized messages.
 
 
